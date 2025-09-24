@@ -9,6 +9,8 @@ export default [
       "out/**",
       "build/**",
       "next-env.d.ts",
+      // Ignore generated OpenAPI client code
+      "src/api/gen/**",
     ],
   },
   {
