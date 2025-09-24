@@ -1,0 +1,125 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches: [ staging, main, prod ]
+    types: [ opened, synchronize, reopened ]
+
+jobs:
+  # Security and dependency checks
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.19.0'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run security audit (moderate)
+        run: pnpm audit --audit-level moderate
+
+      - name: Run security audit (high)
+        run: pnpm audit --audit-level high
+
+  # Bundle size analysis
+  bundle-analysis:
+    name: Bundle Analysis
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.19.0'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build for analysis
+        run: pnpm build
+
+      - name: Analyze bundle size
+        run: |
+          echo "## Bundle Size Report" >> $GITHUB_STEP_SUMMARY
+          echo "### Web App" >> $GITHUB_STEP_SUMMARY
+          if [ -d "apps/web/.next" ]; then
+            du -sh apps/web/.next >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "### Docs App" >> $GITHUB_STEP_SUMMARY
+          if [ -d "apps/docs/.next" ]; then
+            du -sh apps/docs/.next >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "### API" >> $GITHUB_STEP_SUMMARY
+          if [ -d "apps/api/dist" ]; then
+            du -sh apps/api/dist >> $GITHUB_STEP_SUMMARY
+          fi
+
+  # Validate that all CI jobs pass
+  validate-ci:
+    name: Validate CI Status
+    runs-on: ubuntu-latest
+    needs: [security, bundle-analysis]
+    if: always()
+    
+    steps:
+      - name: Check CI status
+        run: |
+          if [[ "${{ needs.security.result }}" != "success" ]]; then
+            echo "Security checks failed"
+            exit 1
+          fi
+          if [[ "${{ needs.bundle-analysis.result }}" != "success" ]]; then
+            echo "Bundle analysis failed"
+            exit 1
+          fi
+          echo "All PR validation checks passed!"
+
+  # Commit message validation
+  commit-lint:
+    name: Validate Commit Messages
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.19.0'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate commit messages
+        run: |
+          # Check commits in this PR
+          git log --format="%s" origin/${{ github.base_ref }}..HEAD | while read commit_msg; do
+            echo "Validating: $commit_msg"
+            echo "$commit_msg" | pnpm commitlint:ci
+          done
