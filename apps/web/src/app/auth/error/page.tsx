@@ -1,47 +1,14 @@
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-
-interface ErrorPageProps {
-  searchParams: {
-    error?: string;
-  };
-}
-
-export default function ErrorPage({ searchParams }: ErrorPageProps) {
-  const error = searchParams.error || 'An unexpected error occurred';
-
+export default async function AuthErrorPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const params = await searchParams;
+  const message = params.error || 'Authentication error';
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl text-red-600">
-              Authentication Error
-            </CardTitle>
-            <CardDescription>
-              Something went wrong with your authentication
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-muted-foreground mb-4">{error}</p>
-            <div className="flex gap-2">
-              <Button asChild variant="outline" className="flex-1">
-                <Link href="/auth/login">Try again</Link>
-              </Button>
-              <Button asChild className="flex-1">
-                <Link href="/">Go home</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+    <div className="mx-auto max-w-md py-10">
+      <h1 className="text-xl font-semibold mb-4">Auth Error</h1>
+      <p className="text-sm text-red-600">{message}</p>
     </div>
   );
 }

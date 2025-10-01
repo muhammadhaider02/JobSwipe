@@ -1,11 +1,10 @@
 import { redirect } from 'next/navigation';
+import Link from 'next/link';
 
 import { createClient } from '@/lib/supabase/server';
-import { InfoIcon } from 'lucide-react';
 
 export default async function ProtectedPage() {
-  const supabase = await createClient();
-
+  const supabase = createClient();
   const { data, error } = await supabase.auth.getClaims();
   if (error || !data?.claims) {
     redirect('/auth/login');
@@ -13,24 +12,17 @@ export default async function ProtectedPage() {
 
   return (
     <div className="flex-1 w-full flex flex-col gap-12">
-      <div className="w-full">
-        <div className="bg-accent text-sm p-3 px-5 rounded-md text-foreground flex gap-3 items-center">
-          <InfoIcon size="16" strokeWidth={2} />
-          This is a protected page that you can only see as an authenticated
-          user
-        </div>
-      </div>
-      <div className="flex flex-col gap-2 items-start">
-        <h2 className="font-bold text-2xl mb-4">Your user details</h2>
-        <pre className="text-xs font-mono p-3 rounded border max-h-32 overflow-auto">
-          {JSON.stringify(data.claims, null, 2)}
-        </pre>
-      </div>
-      <div>
-        <h2 className="font-bold text-2xl mb-4">Welcome to JobSwipe!</h2>
-        <p className="text-muted-foreground">
-          You are now logged in and can access all the features of our platform.
+      <div className="flex flex-col gap-4">
+        <h2 className="font-bold text-2xl mb-2">Next Steps</h2>
+        <p className="text-sm text-muted-foreground">
+          Complete your resume onboarding to unlock personalized features.
         </p>
+        <Link
+          href="/protected/onboarding"
+          className="inline-flex items-center justify-center rounded-md text-sm font-medium h-10 px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 transition-colors w-fit"
+        >
+          Start Resume Onboarding
+        </Link>
       </div>
     </div>
   );

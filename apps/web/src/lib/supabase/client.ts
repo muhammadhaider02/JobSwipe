@@ -1,17 +1,24 @@
-import { createBrowserClient } from '@supabase/ssr';
+import {
+  createClient as createSupabaseClient,
+  type SupabaseClient,
+} from '@supabase/supabase-js';
 
-export function createClient() {
+let client: SupabaseClient | null = null;
+
+export function createClient(): SupabaseClient {
+  if (client) return client;
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_OR_ANON_KEY;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY; // removed SUPABASE_ANON_KEY fallback
 
   if (!supabaseUrl || !supabaseKey) {
     throw new Error(
-      `Missing Supabase environment variables. 
+      `Missing Supabase environment variables.
       URL: ${supabaseUrl ? 'Found' : 'Missing'}
-      Key: ${supabaseKey ? 'Found' : 'Missing'}
-      Please check your .env.local file.`,
+      Key: ${supabaseKey ? 'Found' : 'Missing'}`,
     );
   }
 
-  return createBrowserClient(supabaseUrl, supabaseKey);
+  client = createSupabaseClient(supabaseUrl, supabaseKey);
+  return client;
 }

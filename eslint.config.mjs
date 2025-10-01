@@ -5,6 +5,7 @@ import globals from 'globals';
 import tseslint from 'typescript-eslint';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
+import reactHooks from 'eslint-plugin-react-hooks'; // added
 
 export default tseslint.config(
   {
@@ -27,10 +28,14 @@ export default tseslint.config(
     },
   },
   {
+    files: ['apps/web/**/*.{js,jsx,ts,tsx}'],          // scope React rules
+    plugins: { 'react-hooks': reactHooks },            // register plugin
     rules: {
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-floating-promises': 'warn',
-      '@typescript-eslint/no-unsafe-argument': 'warn'
+      '@typescript-eslint/no-unsafe-argument': 'warn',
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
     },
   },
 );
